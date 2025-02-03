@@ -16,58 +16,89 @@ import com.example.maps.ui.theme.MapsTheme
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.MapView
 import android.Manifest
-import com.example.maps.ui.map.OsmdroidMapView
+import android.preference.PreferenceManager
+
+import android.content.Context
+import android.graphics.BitmapFactory
+import androidx.activity.enableEdgeToEdge
+import org.osmdroid.config.Configuration.*
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 
 class MainActivity : ComponentActivity() {
-    private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
-    private lateinit var map : MapView
+	private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), 0)
-        }
+	override fun onCreate(savedInstanceState: Bundle?) {
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), 0)
+		}
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 0)
+		}
 
-        super.onCreate(savedInstanceState)
+		super.onCreate(savedInstanceState)
 
-        //enableEdgeToEdge()
-        setContent {
-            MapsTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MapApp()
-                }
-            }
-        }
-//        val ctx = applicationContext
-//        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
-//        Configuration.getInstance().userAgentValue = "maps"
-    }
+		enableEdgeToEdge()
+		setContent {
+			MapsTheme {
+				Surface(
+					modifier = Modifier.fillMaxSize(),
+					color = MaterialTheme.colorScheme.background
+				) {
+					MapApp()
+				}
+			}
+		}
+	}
 }
 
-//@Composable
-//fun OsmdroidMapView(
-//    modifier: Modifier = Modifier
-//) {
-//    AndroidView(
-//        modifier = Modifier.fillMaxSize(),
-//        factory = { context ->
-//            val map = MapView(context)
-//            map.setTileSource(TileSourceFactory.MAPNIK)
-//            map.setMultiTouchControls(true)
-//            map
-//        },
-////        update = { view ->
-////            view.controller.setCenter(GeoPoint(0.0,0.0))
-////        }
-//    )
-//}
-
-@Composable
-fun StartOsmdroid(
-    modifier: Modifier = Modifier
-) {
-    OsmdroidMapView()
+// Code below used to test functionality of base osmDroid code.
+/*
+class MainActivity : ComponentActivity() {
+	private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
+	private lateinit var map : MapView
+	
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
+		
+		getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this))
+		setContentView(R.layout.map)
+		
+		map = findViewById<MapView>(R.id.map)
+		map.setTileSource(TileSourceFactory.MAPNIK)
+		
+		val locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), map)
+		
+	}
+	
+	override fun onResume() {
+		super.onResume()
+		map.onResume() //needed for compass, my location overlays, v6.0.0 and up
+	}
+	
+	override fun onPause() {
+		super.onPause()
+	}
+	
+	override fun onRequestPermissionsResult(
+		requestCode: Int,
+		permissions: Array<out String>,
+		grantResults: IntArray,
+		deviceId: Int
+	) {
+		val permissionsToRequest = ArrayList<String>()
+		var i = 0
+		while (i < grantResults.size) {
+			permissionsToRequest.add(permissions[i])
+			i++
+		}
+		if (permissionsToRequest.size > 0) {
+			ActivityCompat.requestPermissions(
+				this,
+				permissionsToRequest.toTypedArray(),
+				REQUEST_PERMISSIONS_REQUEST_CODE)
+		}
+	}
 }
+*/

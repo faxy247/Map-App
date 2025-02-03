@@ -15,11 +15,13 @@ object MapDestination : AppNavDestination {
 fun MapScreen(
 	modifier: Modifier = Modifier
 ) {
+	val maps = OsmMaps()
+	
 	Scaffold(
 		modifier = modifier,
 		topBar = {},
 	) { innerPadding ->
-		OsmdroidMapView(
+		maps.OsmdroidMapView(
 			modifier = Modifier,
 			contentPadding = innerPadding,
 		)
