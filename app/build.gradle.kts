@@ -50,8 +50,12 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+    //navigation
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
+
     // osmdroid
-    implementation("org.osmdroid:osmdroid-android:6.1.20")
+    implementation(libs.osmdroid.android)
     //implementation("org.osmdroid:osmdroid-wms:")
 
     testImplementation(libs.junit)
