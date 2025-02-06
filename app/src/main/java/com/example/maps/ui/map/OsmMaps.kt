@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Address
+import android.location.Geocoder
+import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,9 +21,15 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.lang.Exception
+import java.util.Locale
+
+private const val TAG = "OsmMaps"
 
 class OsmMaps : Application() {
-	private lateinit var map : MapView
+	private lateinit var cMap : MapView
+	private lateinit var cLocationOverlay: MyLocationNewOverlay
+	private lateinit var cGeocoder: Geocoder
 	
 	@Composable
 	fun OsmdroidMapView(
@@ -34,13 +43,14 @@ class OsmMaps : Application() {
 				.fillMaxSize()
 				.padding(contentPadding),
 			factory = { context ->
-				map = MapView(context)
-				val locationOverlay = createLocationOverlay(context = context, resIcon = R.drawable.bluecircle)
+				cMap = MapView(context)
+				cLocationOverlay = createLocationOverlay(context = context, resIcon = R.drawable.bluecircle)
+				cGeocoder = Geocoder(context, Locale.getDefault())
 				
-				map.setTileSource(TileSourceFactory.MAPNIK)
-				map.setMultiTouchControls(true)
-				map.overlays.add(locationOverlay)
-				map
+				cMap.setTileSource(TileSourceFactory.MAPNIK)
+				cMap.setMultiTouchControls(true)
+				cMap.overlays.add(cLocationOverlay)
+				cMap
 			},
 			update = { view ->
 				view.controller.setCenter(centrePoint)
@@ -57,7 +67,7 @@ class OsmMaps : Application() {
 			50,
 			true
 		) // Rescale icon to fit on screen properly
-		val locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), map)
+		val locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), cMap)
 		
 		locationOverlay.setPersonIcon(locationIcon)
 		locationOverlay.setPersonAnchor(0.5f,0.5f)
@@ -68,5 +78,31 @@ class OsmMaps : Application() {
 		locationOverlay.enableFollowLocation()
 		
 		return locationOverlay
+	}
+	
+	fun toLiveLocation() {
+		cLocationOverlay.enableFollowLocation()
+	}
+	
+	// Based on code from:
+	// https://stackoverflow.com/questions/69148288/how-to-search-location-name-on-osmdroid-to-get-latitude-longitude
+	fun searchLocationListByName(locationName: String) : Address? { // Restricted to 1 Address for now
+		try {
+			val geoResults: MutableList<Address>? = cGeocoder.getFromLocationName(locationName, 1)
+			if (!geoResults.isNullOrEmpty())
+			{
+				val address = geoResults[0]
+				return address // TODO return list of addresses
+			}
+		} catch (e: Exception) {
+			Log.e(TAG, "Exception in searchLocationListByName: $e")
+		}
+		return null
+	}
+	
+	fun updateLocationByAddress(location: Address){
+		cMap.controller.setCenter(
+			GeoPoint(location.latitude, location.longitude)
+		)
 	}
 }
