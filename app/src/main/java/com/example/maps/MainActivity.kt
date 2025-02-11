@@ -3,6 +3,7 @@ package com.example.maps
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,10 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.maps.ui.theme.MapsTheme
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
+import android.content.Context
+
+
+import org.osmdroid.config.Configuration.*
 
 class MainActivity : ComponentActivity() {
-
 	override fun onCreate(savedInstanceState: Bundle?) {
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
 			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), 0)
@@ -24,7 +32,9 @@ class MainActivity : ComponentActivity() {
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 0)
 		}
-
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_NETWORK_STATE), 0)
+		}
 		super.onCreate(savedInstanceState)
 
 		enableEdgeToEdge()
@@ -43,6 +53,7 @@ class MainActivity : ComponentActivity() {
 
 // Code below used to test functionality of base osmDroid code.
 /*
+
 class MainActivity : ComponentActivity() {
 	private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
 	private lateinit var map : MapView
@@ -55,8 +66,6 @@ class MainActivity : ComponentActivity() {
 		
 		map = findViewById<MapView>(R.id.map)
 		map.setTileSource(TileSourceFactory.MAPNIK)
-		
-		val locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), map)
 		
 	}
 	

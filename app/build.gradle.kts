@@ -56,6 +56,8 @@ dependencies {
 
     // osmdroid
     implementation(libs.osmdroid.android)
+	implementation(libs.androidx.room.common)
+    implementation(libs.androidx.preference.ktx)
     //implementation("org.osmdroid:osmdroid-wms:")
 
     testImplementation(libs.junit)
