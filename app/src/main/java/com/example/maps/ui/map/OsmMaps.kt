@@ -11,23 +11,39 @@ import android.location.Geocoder
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.os.StrictMode
 import androidx.preference.PreferenceManager
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import com.example.maps.R
+import com.example.maps.data.Routes
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.annotations.TestOnly
+import org.osmdroid.bonuspack.routing.OSRMRoadManager
+import org.osmdroid.bonuspack.routing.Road
+import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.lang.Exception
@@ -43,9 +59,10 @@ class OsmMaps : Activity() {
 	private lateinit var mMap : MapView
 	private lateinit var mLocationOverlay: MyLocationNewOverlay
 	private lateinit var mGeocoder: Geocoder
+	private lateinit var mRoutes : Routes
 	
-	var mCurrentAddress: Address? = null
-	var mSearchResults : List<Address>? = null
+	var mCurrentAddress by mutableStateOf(Address(Locale.getDefault()))
+	var mSearchResults : MutableList<Address>? = null
 	
 	override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
 		super.onCreate(savedInstanceState, persistentState)
@@ -97,18 +114,21 @@ class OsmMaps : Activity() {
 				mMap = MapView(context)
 				mLocationOverlay = createLocationOverlay(context = context, resIcon = R.drawable.bluecircle)
 				mGeocoder = Geocoder(context, Locale.getDefault())
+				val rotationGestureOverlay = RotationGestureOverlay(mMap)
+				rotationGestureOverlay.isEnabled
 				
 				mMap.setTileSource(TileSourceFactory.MAPNIK)
 				mMap.setMultiTouchControls(true)
 				mMap.overlays.add(mLocationOverlay)
+				mMap.overlays.add(rotationGestureOverlay)
 				
 				// Only seems to be configurable here, required to load maps
 				Configuration.getInstance().userAgentValue = BuildConfig.LIBRARY_PACKAGE_NAME
+				mRoutes = Routes(context, Configuration.getInstance().userAgentValue)
 				
 				mMap
 			},
 			update = { view ->
-				view.controller.setCenter(centrePoint)
 				view.controller.setZoom(zoomLevel)
 			}
 		)
@@ -140,24 +160,31 @@ class OsmMaps : Activity() {
 		mLocationOverlay.enableFollowLocation()
 	}
 	
+	fun getLiveLocation() : GeoPoint {
+		return mLocationOverlay.myLocation
+	}
+	
+	fun getCurrentAddress() : GeoPoint {
+		return GeoPoint(mCurrentAddress.latitude, mCurrentAddress.longitude)
+	}
+	
 	// Search for location
 	// Based on code from:
 	// https://stackoverflow.com/questions/69148288/how-to-search-location-name-on-osmdroid-to-get-latitude-longitude
 	@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-	fun searchLocationListByName(locationName: String) {
+	fun searchLocationListByName(locationName: String) : MutableList<Address>? {
 		try {
-			val geoListener = @RequiresApi(33) object : Geocoder.GeocodeListener {
-				override fun onGeocode(addresses: MutableList<Address>) {
-					mSearchResults = addresses
-				}
-			}
+			val geoListener = (Geocoder.GeocodeListener { addresses ->
+				mSearchResults = addresses
+			})
 			mGeocoder.getFromLocationName(locationName, R.integer.max_locations, geoListener)
 		} catch (e: Exception) {
 			Log.e(TAG, "Exception in searchLocationListByName: $e")
 		}
+		return mSearchResults
 	}
 	
-	private fun updateLocationByAddress(location: Address){
+	fun updateLocationByAddress(location: Address){
 		mLocationOverlay.disableFollowLocation()
 		mMap.controller.setCenter(
 			GeoPoint(location.latitude, location.longitude)
@@ -185,5 +212,22 @@ class OsmMaps : Activity() {
 				Log.e(TAG, "Invalid searchUse in onLocationClicked, searchUse: $searchUse")
 			}
 		}
+	}
+	
+	fun getCurrentAddressDetails() : String {
+		return mCurrentAddress.getAddressLine(0)
+	}
+	
+	fun showRoute(pointList: ArrayList<GeoPoint>){
+		val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+		StrictMode.setThreadPolicy(policy)
+		
+		val route = mRoutes.getRouteOverlay(pointList)
+		mMap.overlays.add(route)
+		
+		/*runBlocking {
+			val roadOverlay : Deferred<Polyline> = async { mRoutes.getRouteOverlay(pointList) }
+			mMap.overlays.add(roadOverlay)
+		}*/
 	}
 }

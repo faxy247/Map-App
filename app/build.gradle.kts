@@ -58,7 +58,9 @@ dependencies {
     implementation(libs.osmdroid.android)
 	implementation(libs.androidx.room.common)
     implementation(libs.androidx.preference.ktx)
-    //implementation("org.osmdroid:osmdroid-wms:")
+    
+    // osmdroid bonus pack
+    implementation("com.github.mkergall:osmbonuspack:6.9.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
