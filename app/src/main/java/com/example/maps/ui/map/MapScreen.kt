@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -118,6 +119,7 @@ private fun MapsBottomBar(
 		horizontalAlignment = Alignment.End
 	) {
 		Spacer(Modifier.weight(1f))
+		// Live Location Button
 		FilledIconButton(
 			onClick = { maps.toLiveLocation() },
 			shape = MaterialTheme.shapes.medium,
@@ -129,6 +131,21 @@ private fun MapsBottomBar(
 				contentDescription = stringResource(R.string.live_location)
 			)
 		}
+		// Test Route Button
+		FilledIconButton(
+			onClick = {
+				val pointList = ArrayList<GeoPoint>()
+				pointList.add(maps.getLiveLocation())
+				maps.showRoute(pointList, defaultTest = true) },
+			shape = MaterialTheme.shapes.medium,
+			modifier = Modifier
+				.padding(20.dp),
+		) {
+			Icon(
+				imageVector = Icons.Default.Favorite,
+				contentDescription = stringResource(R.string.live_location)
+			)
+		}
 		
 		Card(
 			modifier
@@ -137,6 +154,7 @@ private fun MapsBottomBar(
 				.fillMaxWidth()
 		) {
 			Column {
+				// Address Result Bar
 				if (addressDetails.isNotBlank()) {
 					Text(addressDetails)
 					
@@ -148,7 +166,7 @@ private fun MapsBottomBar(
 								val pointList = ArrayList<GeoPoint>()
 								pointList.add(maps.getLiveLocation())
 								pointList.add(maps.getCurrentAddress())
-								maps.showRoute(pointList)
+								maps.showRoute(pointList, useSF = false)
 							}
 						) {
 							Text("Directions")

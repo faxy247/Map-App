@@ -1,9 +1,7 @@
 package com.example.maps.ui.map
 
 import android.app.Activity
-import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Address
@@ -18,31 +16,21 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import com.example.maps.R
 import com.example.maps.data.Routes
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.annotations.TestOnly
-import org.osmdroid.bonuspack.routing.OSRMRoadManager
-import org.osmdroid.bonuspack.routing.Road
-import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
@@ -121,6 +109,7 @@ class OsmMaps : Activity() {
 				mMap.setMultiTouchControls(true)
 				mMap.overlays.add(mLocationOverlay)
 				mMap.overlays.add(rotationGestureOverlay)
+				
 				
 				// Only seems to be configurable here, required to load maps
 				Configuration.getInstance().userAgentValue = BuildConfig.LIBRARY_PACKAGE_NAME
@@ -218,12 +207,32 @@ class OsmMaps : Activity() {
 		return mCurrentAddress.getAddressLine(0)
 	}
 	
-	fun showRoute(pointList: ArrayList<GeoPoint>){
+	fun showRoute(pointList: ArrayList<GeoPoint>,
+				  useSF : Boolean = true,
+				  clear : Boolean = true,
+				  defaultTest : Boolean = false
+	){
 		val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
 		StrictMode.setThreadPolicy(policy)
 		
-		val route = mRoutes.getRouteOverlay(pointList)
-		mMap.overlays.add(route)
+		// Clear current route overlay
+//		if (clear) {
+//			mMap.overlays.removeAt(R.integer.overlay_id_OSRM)
+//			mMap.overlays.removeAt(R.integer.overlay_id_SF)
+//		}
+		
+		if (useSF) {
+			if (defaultTest){
+				val route = mRoutes.getSFTest()
+				mMap.overlays.add(route)
+			} else {
+				val route = mRoutes.getSFOverlay(pointList)
+				mMap.overlays.add(route)
+			}
+		} else {
+			val route = mRoutes.getOSRMRouteOverlay(pointList)
+			mMap.overlays.add(route)
+		}
 		
 		/*runBlocking {
 			val roadOverlay : Deferred<Polyline> = async { mRoutes.getRouteOverlay(pointList) }

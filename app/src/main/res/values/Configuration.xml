@@ -2,4 +2,8 @@
 <resources>
     <integer name="max_locations">10</integer>
     <integer name="default_zoom_level">10</integer>
+    <integer name="overlay_id_live_location">0</integer>
+    <integer name="overlay_id_rotation_gesture">1</integer>
+    <integer name="overlay_id_OSRM">2</integer>
+    <integer name="overlay_id_SF">3</integer>
 </resources>
