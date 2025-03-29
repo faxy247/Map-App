@@ -157,6 +157,15 @@ class OsmMaps : Activity() {
 		return GeoPoint(mCurrentAddress.latitude, mCurrentAddress.longitude)
 	}
 	
+	fun getBoundingBox() : Array<Double> {
+		return arrayOf<Double>(
+			mMap.boundingBox.lonWest,
+			mMap.boundingBox.lonEast,
+			mMap.boundingBox.latSouth,
+			mMap.boundingBox.latNorth
+		)
+	}
+	
 	// Search for location
 	// Based on code from:
 	// https://stackoverflow.com/questions/69148288/how-to-search-location-name-on-osmdroid-to-get-latitude-longitude
@@ -222,13 +231,8 @@ class OsmMaps : Activity() {
 //		}
 		
 		if (useSF) {
-			if (defaultTest){
-				val route = mRoutes.getSFTest()
-				mMap.overlays.add(route)
-			} else {
-				val route = mRoutes.getSFOverlay(pointList)
-				mMap.overlays.add(route)
-			}
+			val route = mRoutes.getSFRoute(pointList, defaultTest)
+			mMap.overlays.add(route)
 		} else {
 			val route = mRoutes.getOSRMRouteOverlay(pointList)
 			mMap.overlays.add(route)
@@ -238,5 +242,17 @@ class OsmMaps : Activity() {
 			val roadOverlay : Deferred<Polyline> = async { mRoutes.getRouteOverlay(pointList) }
 			mMap.overlays.add(roadOverlay)
 		}*/
+	}
+	
+	fun showHeatMap(clear : Boolean = true,
+					defaultTest : Boolean = false
+	) {
+		val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+		StrictMode.setThreadPolicy(policy)
+		
+		val roads = mRoutes.getSFHeatMap(getBoundingBox(), defaultTest)
+		for (road in roads) {
+			mMap.overlays.add(road)
+		}
 	}
 }

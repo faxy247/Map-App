@@ -1,6 +1,8 @@
 package com.example.maps.ui.map
 
 import android.location.Address
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,6 +62,7 @@ object MapDestination : AppNavDestination {
 	override val titleRes = null
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun MapScreen(
 	modifier: Modifier = Modifier
@@ -118,13 +122,13 @@ private fun MapsBottomBar(
 			.fillMaxWidth(),
 		horizontalAlignment = Alignment.End
 	) {
-		Spacer(Modifier.weight(1f))
+		Spacer(Modifier.weight(2f))
 		// Live Location Button
 		FilledIconButton(
 			onClick = { maps.toLiveLocation() },
 			shape = MaterialTheme.shapes.medium,
 			modifier = Modifier
-				.padding(20.dp),
+				.padding(top = 5.dp, bottom = 5.dp, end = 20.dp),
 		) {
 			Icon(
 				imageVector = Icons.Default.LocationOn,
@@ -139,10 +143,25 @@ private fun MapsBottomBar(
 				maps.showRoute(pointList, defaultTest = true) },
 			shape = MaterialTheme.shapes.medium,
 			modifier = Modifier
-				.padding(20.dp),
+				.padding(top = 5.dp, bottom = 5.dp, end = 20.dp),
 		) {
 			Icon(
 				imageVector = Icons.Default.Favorite,
+				contentDescription = stringResource(R.string.live_location)
+			)
+		}
+		
+		// Test Heat Map Button
+		FilledIconButton(
+			onClick = {
+				maps.showHeatMap(defaultTest = true)
+			},
+			shape = MaterialTheme.shapes.medium,
+			modifier = Modifier
+				.padding(top = 5.dp, bottom = 20.dp, end = 20.dp)
+		) {
+			Icon(
+				imageVector = Icons.Filled.Star,
 				contentDescription = stringResource(R.string.live_location)
 			)
 		}
@@ -169,9 +188,29 @@ private fun MapsBottomBar(
 								maps.showRoute(pointList, useSF = false)
 							}
 						) {
-							Text("Directions")
+							Text("OSRM Directions")
 						}
-						Spacer(Modifier.weight(1f))
+						Button(
+							modifier = Modifier
+								.weight(1f),
+							onClick = {
+								val pointList = ArrayList<GeoPoint>()
+								pointList.add(maps.getLiveLocation())
+								pointList.add(maps.getCurrentAddress())
+								maps.showRoute(pointList)
+							}
+						) {
+							Text("SF Directions")
+						}
+						Button(
+							modifier = Modifier
+								.weight(1f),
+							onClick = {
+								maps.showHeatMap()
+							}
+						) {
+							Text("Crime Map")
+						}
 					}
 				}
 			}
