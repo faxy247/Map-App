@@ -1,10 +1,15 @@
 package com.example.maps.data
 
 import android.content.Context
+import android.util.Log
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Polyline
+import kotlin.time.TimeSource
+import kotlin.time.measureTime
+
+private const val TAG = "Routes"
 
 class Routes(context : Context, userAgent : String ) {
 	private var mOSRMRoadManager = OSRMRoadManager(context, userAgent)
@@ -15,20 +20,33 @@ class Routes(context : Context, userAgent : String ) {
 	}
 	
 	fun getOSRMRouteOverlay(pointList: ArrayList<GeoPoint>) : Polyline {
+		val timeSource = TimeSource.Monotonic
+		val markStart = timeSource.markNow()
 		val road = mOSRMRoadManager.getRoad(pointList)
+		val markEnd = timeSource.markNow()
+		Log.d(TAG, "OSRM Query Time: ${markEnd-markStart}")
 		return RoadManager.buildRoadOverlay(road)
 	}
 	
 	fun getSFRoute(pointList: ArrayList<GeoPoint>,
-				   useDefault : Boolean = false
+				   useDefault : Boolean = false,
+				   algorithm : Int = 0
 	) : Polyline {
+		val timeSource = TimeSource.Monotonic
+		val markStart = timeSource.markNow()
 		val road = if (useDefault) {
-			mSFRoadManager.getDefaultRouteTest()
+			mSFRoadManager.getDefaultRouteTest(algorithm)
 		} else {
 			mSFRoadManager.getRoad(pointList)
 		}
+		val markEnd = timeSource.markNow()
+		Log.d(TAG, "SF Query Time: ${markEnd-markStart}")
+		return when (algorithm) {
+			1 -> RoadManager.buildRoadOverlay(road, 0x80F87D00.toInt(), 10.0f) // colour line orange
+			2 -> RoadManager.buildRoadOverlay(road, 0x80FCD63F.toInt(), 6.0f) // colour line yellow
+			else -> RoadManager.buildRoadOverlay(road, 0x80E30909.toInt(), 5.0f) // colour line red
+		}
 		
-		return RoadManager.buildRoadOverlay(road, 0x80E30909.toInt(), 5.0f) // colour line red
 	}
 	
 	fun getSFHeatMap(boundingBox : Array<Double>,
@@ -42,7 +60,7 @@ class Routes(context : Context, userAgent : String ) {
 		val lines = ArrayList<Polyline>()
 		
 		for (road in roads) {
-			var colour = 0xff836E6E // Grey for no cost
+			var colour = 0x80e0d8d8 // Grey for no cost
 			
 			if (road.mLength <= 1) {
 				// do nothing
@@ -60,7 +78,7 @@ class Routes(context : Context, userAgent : String ) {
 				colour = 0x95000000 // Black - a lot of offences
 			}
 			
-			lines.add(RoadManager.buildRoadOverlay(road, colour.toInt(), 8f))
+			lines.add(RoadManager.buildRoadOverlay(road, colour.toInt(), 10f))
 		}
 		
 		return lines

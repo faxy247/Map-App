@@ -11,6 +11,7 @@ import org.osmdroid.bonuspack.utils.BonusPackHelper
 import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.util.GeoPoint
 import kotlin.collections.ArrayList
+import kotlin.time.TimeSource
 
 private const val TAG = "SFRoadManager"
 
@@ -33,7 +34,11 @@ class SFRoadManager(context : Context, userAgent : String) : RoadManager() {
 		
 		// Create Query URL and get JSON response
 		val urlQuery = getRouteUrl(waypoints[0], waypoints[1])
+		val timeSource = TimeSource.Monotonic
+		val markStart = timeSource.markNow()
 		val jString = BonusPackHelper.requestStringFromUrl(urlQuery, mUserAgent)
+		val markEnd = timeSource.markNow()
+		Log.d(TAG, "SF URL Time: ${markEnd-markStart}")
 		
 		if (jString.isNullOrEmpty()) {
 			Log.e(TAG, "getRoads: jString request failed")
@@ -123,11 +128,12 @@ class SFRoadManager(context : Context, userAgent : String) : RoadManager() {
 	}
 	
 	// Used to test a default route
-	fun getDefaultRouteTest() : Road {
+	fun getDefaultRouteTest(
+		algorithm : Int
+	) : Road {
 		// Create Query URL and get JSON response
-		val urlQuery = mBaseUrl + "route/default"
+		val urlQuery = mBaseUrl + "route/default?route=1&alg=" + algorithm
 		val jString = BonusPackHelper.requestStringFromUrl(urlQuery)
-		//val jString = URL(urlQuery).readText()
 		
 		if (jString.isEmpty()) {
 			Log.e(TAG, "getRoads: jString request failed")

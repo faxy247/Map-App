@@ -36,6 +36,7 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.lang.Exception
 import java.util.Locale
+import kotlin.time.measureTime
 
 private const val TAG = "OsmMaps"
 
@@ -219,7 +220,8 @@ class OsmMaps : Activity() {
 	fun showRoute(pointList: ArrayList<GeoPoint>,
 				  useSF : Boolean = true,
 				  clear : Boolean = true,
-				  defaultTest : Boolean = false
+				  defaultTest : Boolean = false,
+				  compareAlgorithms : Boolean = false
 	){
 		val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
 		StrictMode.setThreadPolicy(policy)
@@ -231,17 +233,25 @@ class OsmMaps : Activity() {
 //		}
 		
 		if (useSF) {
-			val route = mRoutes.getSFRoute(pointList, defaultTest)
-			mMap.overlays.add(route)
+			val time = measureTime {
+				val route = mRoutes.getSFRoute(pointList, defaultTest)
+				mMap.overlays.add(route)
+			}
+			Log.d(TAG, "SF Time: $time")
 		} else {
-			val route = mRoutes.getOSRMRouteOverlay(pointList)
-			mMap.overlays.add(route)
+			val time = measureTime {
+				val route = mRoutes.getOSRMRouteOverlay(pointList)
+				mMap.overlays.add(route)
+			}
+			Log.d(TAG, "OSRM Time: $time")
 		}
-		
-		/*runBlocking {
-			val roadOverlay : Deferred<Polyline> = async { mRoutes.getRouteOverlay(pointList) }
-			mMap.overlays.add(roadOverlay)
-		}*/
+		// Get Routes from different Algorithms
+		if (compareAlgorithms) {
+			val routeAStar = mRoutes.getSFRoute(pointList, defaultTest, 1)
+			val routeDijk = mRoutes.getSFRoute(pointList, defaultTest, 2)
+			mMap.overlays.add(routeAStar)
+			mMap.overlays.add(routeDijk)
+		}
 	}
 	
 	fun showHeatMap(clear : Boolean = true,
