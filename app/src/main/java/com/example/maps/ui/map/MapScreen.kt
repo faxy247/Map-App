@@ -140,7 +140,7 @@ private fun MapsBottomBar(
 			onClick = {
 				val pointList = ArrayList<GeoPoint>()
 				pointList.add(maps.getLiveLocation())
-				maps.showRoute(pointList, defaultTest = true) },
+				maps.showRoute(pointList, defaultTest = true, compareAlgorithms = true) },
 			shape = MaterialTheme.shapes.medium,
 			modifier = Modifier
 				.padding(top = 5.dp, bottom = 5.dp, end = 20.dp),
@@ -151,10 +151,10 @@ private fun MapsBottomBar(
 			)
 		}
 		
-		// Test Heat Map Button
+		// Heat Map Button
 		FilledIconButton(
 			onClick = {
-				maps.showHeatMap(defaultTest = true)
+				maps.showHeatMap()
 			},
 			shape = MaterialTheme.shapes.medium,
 			modifier = Modifier
@@ -201,15 +201,6 @@ private fun MapsBottomBar(
 							}
 						) {
 							Text("SF Directions")
-						}
-						Button(
-							modifier = Modifier
-								.weight(1f),
-							onClick = {
-								maps.showHeatMap()
-							}
-						) {
-							Text("Crime Map")
 						}
 					}
 				}
